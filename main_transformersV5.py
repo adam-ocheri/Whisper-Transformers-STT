@@ -1,39 +1,29 @@
-import transformers
-import datasets
-from datasets import load_dataset
-import evaluate
-import gradio
-from pydub import AudioSegment
 import librosa
 import torch
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
+cache_dir = "./Model/"
+model_name = "openai/whisper-large-v3"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v3").to(
-    device
+model = WhisperForConditionalGeneration.from_pretrained(
+    model_name, cache_dir=cache_dir + model_name + "model"
+).to(device)
+
+processor = WhisperProcessor.from_pretrained(
+    model_name, cache_dir=cache_dir + model_name + "processor"
 )
-processor = WhisperProcessor.from_pretrained("openai/whisper-large-v3")
 
 
 print("Started Inference...")
 
-# sample = load_dataset("osanseviero/dummy_ja_audio")["train"]["audio"][0]
-# speech_data = sample["array"]
-# print("Sample Data:")
-# print(sample)
-# print("Speech Data:")
-# for data in speech_data:
-#     print(data)
-# speech_data = None
+global text
+text = ""
 
 
-# Provide the path to your audio file
-# audio_file_path = "conv-test-00_chunk-0.mp3"
 def begin_transcribe(audio_file_path):
     # Load the audio file
     speech_data, sr = librosa.load(audio_file_path)
-    # speech_data = AudioSegment.from_mp3(audio_file_path)
 
     inputs = processor.feature_extractor(
         speech_data, return_tensors="pt", sampling_rate=16_000
@@ -49,7 +39,9 @@ def begin_transcribe(audio_file_path):
         predicted_ids, skip_special_tokens=True, normalize=True
     )[0]
 
-    print("Result is: ", result)
+    global text
+    text += result + "\n"
+    print("Result is: ", result[::-1])
     print("|-> FINISH <-|")
 
 
@@ -58,4 +50,7 @@ def batch_transcribe(chunks_name, max_idx):
         begin_transcribe(f"{chunks_name}{i}.mp3")
 
 
-batch_transcribe("conv-test-00_chunk-", 4)
+batch_transcribe("c0_service-person_otr4_chunk-", 11)
+
+with open("TranscriptionResult.txt", "w", encoding="utf-8") as file:
+    file.write(text)

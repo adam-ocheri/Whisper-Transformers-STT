@@ -1,5 +1,6 @@
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+import os
 
 
 # Define a function to normalize a chunk to a target amplitude.
@@ -46,7 +47,7 @@ def split_audio_file(
         # TODO: Extract precise timestamp of this chunk, in relation to the base source file
         time = cumulative_time
         cumulative_time += len(chunk)
-
+        # os.mkdir(filepath)
         # Export the audio chunk with new bitrate.
         print("Exporting chunk{0}.mp3.".format(i), f"Start Time: {time * 0.001}")
         normalized_chunk.export(
@@ -54,4 +55,8 @@ def split_audio_file(
         )
 
 
-split_audio_file("c0_service-person_otr4", 600, -30, 0, -20)
+# This is the "ok values" for now
+split_audio_file("c0_service-person_otr4", 900, -40, 1200, -20)
+
+# Here I test! will you send me an angel?
+# split_audio_file("c0_service-person_otr4S", 300, -35, 0, -20)
